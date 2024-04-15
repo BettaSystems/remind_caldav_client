@@ -1,4 +1,3 @@
-
 String trim(String str, [String? chars]) {
   var pattern =
       (chars != null) ? RegExp('^[$chars]+|[$chars]+\$') : RegExp(r'^\s+|\s+$');

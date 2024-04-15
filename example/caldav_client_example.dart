@@ -1,14 +1,13 @@
-import 'package:caldav_client/caldav_client.dart';
-import 'package:caldav_client/src/utils.dart';
+import 'package:remind_caldav_client/caldav_client.dart';
 
 void main() async {
   var client = CalDavClient(
-    baseUrl: 'https://192.168.64.2/',
+    baseUrl: 'http://localhost:8080/',
     headers: Authorization('juli', '1234').basic(),
   );
 
   // initialSync
-  var initialSyncResult = await client.initialSync('/dav.php/calendars/juli/');
+  var initialSyncResult = await client.initialSync('dav.php/calendars/juli/default/');
 
   var calendars = <String>[];
 
@@ -35,42 +34,38 @@ void main() async {
 
   // Print calendar objects info
   if (calendars.isNotEmpty) {
-    var getObjectsResult = await client.getObjects(calendars.first);
+    var getObjectsResult = await client.getObjects(calendars.first, depth: 1);
+
 
     for (var result in getObjectsResult.multistatus!.response) {
       print('PATH: ${result.href}');
 
       if (result.propstat.status == 200) {
         print('CALENDAR DATA:\n${result.propstat.prop['calendar-data']}');
+        print("iCal: ${result.propstat.parsed}");
         print('ETAG: ${result.propstat.prop['getetag']}');
+        print('type: ${result.propstat.prop['calendar-data'].runtimeType}');
+      } else {
+        print('Bad prop status');
       }
-      print('Bad prop status');
     }
 
-    var calendar = '''
-BEGIN:VCALENDAR
-VERSION:2.0
-PRODID:-//PYVOBJECT//NONSGML Version 1//EN
-BEGIN:VEVENT
-UID:test@example.com
-DTSTART;VALUE=DATE:20190306
-CLASS:PRIVATE
-DESCRIPTION:Arman and Adrian released their SRT-file parser library for Dar
- t
-DTSTAMP;X-VOBJ-FLOATINGTIME-ALLOWED=TRUE:20190306T000000
-LOCATION:Heilbronn
-PRIORITY:0
-RRULE:FREQ=YEARLY
-STATUS:CONFIRMED
-SUMMARY:SRT-file Parser Release
-URL:https://pub.dartlang.org/packages/srt_parser
-END:VEVENT
-END:VCALENDAR''';
+//     final calendar = '''
+// BEGIN:VCALENDAR
+// VERSION:2.0
+// PRODID:-//PYVOBJECT//NONSGML Version 1//EN
+// BEGIN:VEVENT
+// UID:20010712T182145Z-123401@example.com
+// DTSTAMP:20060712T182145Z
+// DTSTART:20060714T170000Z
+// DTEND:20060715T040000Z
+// SUMMARY:Bastille Day Party
+// END:VEVENT
+// END:VCALENDAR''';
 
-    // Create calendar
-    var createCalResponse =
-        await client.createCal(join(calendars.first, '/example.ics'), calendar);
+    // // Create calendar
+    // var createCalResponse = await client.createCal(join(calendars.first, '/example.ics'), calendar);
 
-    if (createCalResponse.statusCode == 201) print('Created');
+    // if (createCalResponse.statusCode == 201) print('Created');
   }
 }

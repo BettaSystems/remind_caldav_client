@@ -1,4 +1,4 @@
-import 'package:caldav_client/src/multistatus/propstat.dart';
+import 'package:remind_caldav_client/src/multistatus/propstat.dart';
 import 'package:xml/xml.dart';
 
 class Response {

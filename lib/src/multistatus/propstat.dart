@@ -1,43 +1,38 @@
-import 'package:caldav_client/src/multistatus/element.dart';
+import 'package:icalendar_parser/icalendar_parser.dart';
+import 'package:remind_caldav_client/src/multistatus/element.dart';
 import 'package:xml/xml.dart';
 
 class Propstat {
+  final ICalendar? parsed;
   final Map<String, dynamic> prop;
   final int status;
 
-  Propstat({required this.prop, required this.status});
+  Propstat({required this.prop, required this.status, required this.parsed});
 
   factory Propstat.fromXml(XmlElement element) {
     if (element.name.local == 'propstat') {
-      var prop = <String, dynamic>{};
+      final prop = <String, dynamic>{};
 
-      var elements = element.children.whereType<XmlElement>();
+      final elements = element.children.whereType<XmlElement>();
 
       // get prop
-      var props = elements
-          .firstWhere((element) => element.name.local == 'prop')
-          .children
-          .whereType<XmlElement>();
+      final props = elements.firstWhere((element) => element.name.local == 'prop').children.whereType<XmlElement>();
 
       // set prop value
       props.forEach((element) {
-        var children = element.children
-            .whereType<XmlElement>()
-            .map((element) => Element.fromXml(element))
-            .toList();
+        var children = element.children.whereType<XmlElement>().map((element) => Element.fromXml(element)).toList();
 
-        var value = children.isEmpty ? element.text : children;
+        var value = children.isEmpty ? element.innerText : children;
 
         prop[element.name.local] = value;
       });
 
-      // get status
-      var status = elements
-          .firstWhere((element) => element.name.local == 'status')
-          .text
-          .split(' ')[1];
+      final parsedICal = prop['calendar-data'] != null ? ICalendar.fromString(prop['calendar-data']!) : null;
 
-      return Propstat(prop: prop, status: int.parse(status));
+      // get status
+      final status = elements.firstWhere((element) => element.name.local == 'status').innerText.split(' ')[1];
+
+      return Propstat(prop: prop, parsed: parsedICal, status: int.parse(status));
     }
 
     throw Error();

@@ -1,5 +1,5 @@
-import 'package:caldav_client/src/multistatus/element.dart';
-import 'package:caldav_client/src/multistatus/multistatus.dart';
+import 'package:remind_caldav_client/src/multistatus/element.dart';
+import 'package:remind_caldav_client/src/multistatus/multistatus.dart';
 import 'package:test/test.dart';
 
 void main() {

@@ -1,7 +1,7 @@
 import 'dart:io';
 
-import 'package:caldav_client/src/cal_response.dart';
-import 'package:caldav_client/src/utils.dart';
+import 'package:remind_caldav_client/src/cal_response.dart';
+import 'package:remind_caldav_client/src/utils.dart';
 
 class CalDavBase {
   final HttpClient client;
@@ -16,15 +16,19 @@ class CalDavBase {
     client.connectionTimeout = connectionTimeout;
   }
 
+  void checkResponse(HttpClientResponse res) {
+    if (res.statusCode - 200 >= 200) {
+      throw HttpException(res.reasonPhrase);
+    }
+  }
+
   /// Allows the client to fetch properties from a url.
-  Future<CalResponse> propfind(String path, dynamic body,
-      {int? depth, Map<String, dynamic>? headers}) async {
+  Future<CalResponse> propfind(String path, dynamic body, {int? depth, Map<String, dynamic>? headers}) async {
     var uri = _fullUri(path);
     var request = await client.openUrl('PROPFIND', Uri.parse(uri));
 
     // headers
-    request.headers.contentType =
-        ContentType('application', 'xml', charset: 'utf-8');
+    request.headers.contentType = ContentType('application', 'xml', charset: 'utf-8');
 
     var temp = <String, dynamic>{
       'Prefer': 'return-minimal',
@@ -42,20 +46,20 @@ class CalDavBase {
 
     var response = await request.close();
 
+    checkResponse(response);
+
     return CalResponse.fromHttpResponse(response, uri);
   }
 
   /// REPORT performs a search for all calendar object resources that match a
   /// specified filter. The response of this report will contain all the WebDAV
   /// properties and calendar object resource data specified in the request.
-  Future<CalResponse> report(String path, dynamic body,
-      {int? depth, Map<String, dynamic>? headers}) async {
+  Future<CalResponse> report(String path, dynamic body, {int? depth, Map<String, dynamic>? headers}) async {
     var uri = _fullUri(path);
     var request = await client.openUrl('REPORT', Uri.parse(uri));
 
     // headers
-    request.headers.contentType =
-        ContentType('application', 'xml', charset: 'utf-8');
+    request.headers.contentType = ContentType('application', 'xml', charset: 'utf-8');
 
     var temp = <String, dynamic>{
       HttpHeaders.acceptHeader: 'application/xml,text/xml',
@@ -73,12 +77,13 @@ class CalDavBase {
 
     var response = await request.close();
 
+    checkResponse(response);
+
     return CalResponse.fromHttpResponse(response, uri);
   }
 
   /// Fetch the contents for the object
-  Future<CalResponse> downloadIcs(String path, String savePath,
-      {Map<String, dynamic>? headers}) async {
+  Future<CalResponse> downloadIcs(String path, String savePath, {Map<String, dynamic>? headers}) async {
     var uri = _fullUri(path);
     var request = await client.getUrl(Uri.parse(uri));
 
@@ -91,23 +96,19 @@ class CalDavBase {
     var response = await request.close();
     await response.pipe(File(savePath).openWrite());
 
+    checkResponse(response);
+
     return CalResponse(url: uri, headers: {}, statusCode: response.statusCode);
   }
 
   /// Update calendar ifMatch the etag
-  Future<CalResponse> updateCal(String path, String etag, dynamic calendar,
-      {Map<String, dynamic>? headers}) async {
+  Future<CalResponse> updateCal(String path, String etag, dynamic calendar, {Map<String, dynamic>? headers}) async {
     var uri = _fullUri(path);
     var request = await client.putUrl(Uri.parse(uri));
 
-    request.headers.contentType =
-        ContentType('text', 'calendar', charset: 'utf-8');
+    request.headers.contentType = ContentType('text', 'calendar', charset: 'utf-8');
 
-    var temp = <String, dynamic>{
-      'If-Match': '"$etag"',
-      ...?headers,
-      ...?this.headers
-    };
+    var temp = <String, dynamic>{'If-Match': '"$etag"', ...?headers, ...?this.headers};
 
     temp.forEach((key, value) {
       request.headers.add(key, value);
@@ -117,18 +118,18 @@ class CalDavBase {
 
     var response = await request.close();
 
+    checkResponse(response);
+
     return CalResponse.fromHttpResponse(response, uri);
   }
 
   /// Create calendar
-  Future<CalResponse> createCal(String path, dynamic calendar,
-      {Map<String, dynamic>? headers}) async {
+  Future<CalResponse> createCal(String path, dynamic calendar, {Map<String, dynamic>? headers}) async {
     var uri = _fullUri(path);
 
     var request = await client.putUrl(Uri.parse(uri));
 
-    request.headers.contentType =
-        ContentType('text', 'calendar', charset: 'utf-8');
+    request.headers.contentType = ContentType('text', 'calendar', charset: 'utf-8');
 
     var temp = <String, dynamic>{...?headers, ...?this.headers};
 
@@ -140,26 +141,25 @@ class CalDavBase {
 
     var response = await request.close();
 
+    checkResponse(response);
+
     return CalResponse.fromHttpResponse(response, uri);
   }
 
   /// Delete calendar
-  Future<CalResponse> deleteCal(String path, String etag,
-      {Map<String, dynamic>? headers}) async {
+  Future<CalResponse> deleteCal(String path, String etag, {Map<String, dynamic>? headers}) async {
     var uri = _fullUri(path);
     var request = await client.deleteUrl(Uri.parse(uri));
 
-    var temp = <String, dynamic>{
-      'If-Match': '"$etag"',
-      ...?headers,
-      ...?this.headers
-    };
+    var temp = <String, dynamic>{'If-Match': '"$etag"', ...?headers, ...?this.headers};
 
     temp.forEach((key, value) {
       request.headers.add(key, value);
     });
 
     var response = await request.close();
+
+    checkResponse(response);
 
     return CalResponse.fromHttpResponse(response, uri);
   }

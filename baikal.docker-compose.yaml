@@ -1,0 +1,17 @@
+# Docker Compose file for a Baikal server
+# https://github.com/ckulka/baikal-docker/blob/master/examples/docker-compose.yaml
+
+version: "2"
+services:
+  baikal:
+    image: ckulka/baikal:nginx
+    restart: always
+    ports:
+      - "8080:80"
+    volumes:
+      - config:/var/www/baikal/config
+      - data:/var/www/baikal/Specific
+
+volumes:
+  config:
+  data:

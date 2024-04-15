@@ -1,8 +1,7 @@
 import 'dart:io';
 
-import 'package:caldav_client/src/authorization.dart';
-import 'package:caldav_client/src/caldav_client.dart';
 import 'package:mock_web_server/mock_web_server.dart';
+import 'package:remind_caldav_client/caldav_client.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -73,7 +72,7 @@ void main() {
       await client.getObjectsInTimeRange(
           '/dav.php/calendars/juli/default/', now, end,
           depth: 1);
-      
+
       var request = mockServer.takeRequest();
       expect(request.method, 'REPORT');
       expect(request.uri.path, '/dav.php/calendars/juli/default/');
